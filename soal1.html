@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kuis 20 Soal</title>
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800&family=Clash+Display:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07080a;
+  --surface: #0d1117;
+  --card: #111620;
+  --border: #1e2a3a;
+  --border2: #243040;
+  --lime: #b8f724;
+  --cyan: #00e5ff;
+  --orange: #ff6b35;
+  --pink: #ff3d8a;
+  --text: #e8eef8;
+  --muted: #5a6a80;
+  --muted2: #3a4a5e;
+  --correct: #b8f724;
+  --correct-bg: rgba(184,247,36,0.07);
+  --wrong: #ff3d8a;
+  --wrong-bg: rgba(255,61,138,0.07);
+  --mono: 'DM Mono', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Manrope', sans-serif;
+  min-height: 100vh;
+}
+
+body {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 32px 20px 60px;
+}
+
+/* scanline overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+  pointer-events: none;
+  z-index: 100;
+}
+
+.wrapper { width: 100%; max-width: 680px; }
+
+/* ── HEADER ── */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.logo {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--lime);
+}
+
+.logo::before { content: '> '; opacity: 0.5; }
+
+.hud {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.hud-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.hud-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.hud-val {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--lime);
+  line-height: 1;
+}
+
+.hud-divider {
+  width: 1px;
+  height: 32px;
+  background: var(--border);
+}
+
+/* ── PROGRESS ── */
+.progress-wrap {
+  margin-bottom: 28px;
+  position: relative;
+}
+
+.progress-nums {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+
+.progress-track {
+  height: 3px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--lime), var(--cyan));
+  border-radius: 99px;
+  transition: width 0.5s cubic-bezier(.4,0,.2,1);
+  box-shadow: 0 0 12px rgba(184,247,36,0.5);
+}
+
+.progress-dots {
+  display: flex;
+  gap: 3px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.pdot {
+  width: 8px; height: 8px;
+  border-radius: 2px;
+  background: var(--border2);
+  transition: background 0.3s;
+}
+.pdot.ok   { background: var(--lime); box-shadow: 0 0 6px rgba(184,247,36,0.4); }
+.pdot.no   { background: var(--wrong); box-shadow: 0 0 6px rgba(255,61,138,0.4); }
+.pdot.now  { background: var(--cyan); box-shadow: 0 0 6px rgba(0,229,255,0.4); }
+
+/* ── CARD ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 36px;
+  position: relative;
+  overflow: hidden;
+  animation: cardIn 0.35s cubic-bezier(.4,0,.2,1);
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--lime), var(--cyan), transparent);
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  border: 1px solid rgba(0,229,255,0.2);
+  background: rgba(0,229,255,0.05);
+  border-radius: 6px;
+  padding: 5px 12px;
+}
+
+.q-id {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+}
+
+.question {
+  font-family: 'Manrope', sans-serif;
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 1.4;
+  color: var(--text);
+  margin-bottom: 28px;
+  letter-spacing: -0.01em;
+}
+
+/* ── OPTIONS ── */
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.opt {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 18px;
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font-family: 'Manrope', sans-serif;
+  font-size: 14.5px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.18s;
+}
+
+.opt:hover:not(:disabled) {
+  border-color: var(--cyan);
+  background: rgba(0,229,255,0.04);
+  padding-left: 22px;
+}
+
+.opt:disabled { cursor: default; }
+
+.opt.correct {
+  border-color: var(--correct);
+  background: var(--correct-bg);
+  color: var(--correct);
+}
+
+.opt.wrong {
+  border-color: var(--wrong);
+  background: var(--wrong-bg);
+  color: var(--wrong);
+}
+
+.key {
+  width: 26px; height: 26px;
+  border-radius: 6px;
+  background: var(--border2);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.18s;
+  letter-spacing: 0;
+}
+
+.opt.correct .key { background: var(--correct); color: var(--bg); }
+.opt.wrong   .key { background: var(--wrong);   color: #fff; }
+
+/* ── EXPLANATION ── */
+.expl {
+  margin-top: 14px;
+  padding: 15px 18px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--cyan);
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--muted);
+  animation: cardIn 0.3s ease;
+}
+
+.expl strong { color: var(--text); font-weight: 700; }
+
+/* ── FOOTER ── */
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+
+.streak-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.streak-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.streak-val {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--lime);
+}
+
+.btn-next {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--lime);
+  color: var(--bg);
+  border: none;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  transition: all 0.18s;
+  box-shadow: 0 0 20px rgba(184,247,36,0.2);
+}
+
+.btn-next:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0 32px rgba(184,247,36,0.4);
+}
+
+.btn-next:disabled {
+  opacity: 0.2;
+  cursor: default;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ── RESULT ── */
+.result { animation: cardIn 0.4s ease; }
+
+.result-hero {
+  text-align: center;
+  padding: 16px 0 32px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 28px;
+}
+
+.result-medal { font-size: 52px; display: block; margin-bottom: 16px; }
+
+.result-score-wrap {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.result-score {
+  font-family: var(--mono);
+  font-size: 72px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--lime);
+  text-shadow: 0 0 40px rgba(184,247,36,0.4);
+}
+
+.result-denom {
+  font-family: var(--mono);
+  font-size: 28px;
+  color: var(--muted);
+}
+
+.result-pct {
+  display: block;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  margin-bottom: 14px;
+}
+
+.result-msg {
+  font-family: 'Manrope', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+
+.result-sub {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+/* Stats row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.stat-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.stat-val {
+  font-family: var(--mono);
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--lime);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.stat-lbl {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+/* Review */
+.review-toggle {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--muted);
+  border-radius: 10px;
+  padding: 11px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-bottom: 12px;
+  transition: all 0.18s;
+}
+.review-toggle:hover { border-color: var(--cyan); color: var(--cyan); }
+
+.review-list {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+  max-height: 340px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.review-list::-webkit-scrollbar { width: 4px; }
+.review-list::-webkit-scrollbar-track { background: var(--border); border-radius: 2px; }
+.review-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+.review-list.open { display: flex; }
+
+.r-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 12.5px;
+}
+
+.r-num {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  min-width: 20px;
+  margin-top: 1px;
+}
+
+.r-body { flex: 1; }
+.r-body b { display: block; color: var(--text); font-size: 13px; margin-bottom: 2px; }
+.r-body p { color: var(--muted); line-height: 1.5; }
+.r-body .ok-ans  { color: var(--correct); font-weight: 600; }
+.r-body .bad-ans { color: var(--wrong); }
+
+.btn-reset {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--lime);
+  color: var(--lime);
+  border-radius: 10px;
+  padding: 14px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: all 0.2s;
+  box-shadow: 0 0 20px rgba(184,247,36,0.1);
+}
+
+.btn-reset:hover {
+  background: var(--lime);
+  color: var(--bg);
+  box-shadow: 0 0 40px rgba(184,247,36,0.3);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 520px) {
+  .card { padding: 22px; }
+  .question { font-size: 17px; }
+  .stats-row { grid-template-columns: repeat(3,1fr); gap: 8px; }
+}
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <header>
+    <div class="logo">kuis_pengetahuan_umum</div>
+    <div class="hud">
+      <div class="hud-item">
+        <div class="hud-label">Skor</div>
+        <div class="hud-val" id="h-score">00</div>
+      </div>
+      <div class="hud-divider"></div>
+      <div class="hud-item">
+        <div class="hud-label">Soal</div>
+        <div class="hud-val" id="h-q">01</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="progress-wrap">
+    <div class="progress-nums">
+      <span id="p-left">0 / 20</span>
+      <span id="p-pct">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="pbar" style="width:0%"></div>
+    </div>
+    <div class="progress-dots" id="pdots"></div>
+  </div>
+
+  <div class="card" id="card"></div>
+</div>
+
+<script>
+const soal = [
+  { b:"🌍 Geografi",      q:"Ibukota negara Australia adalah?",                                                                              o:["Sydney","Melbourne","Canberra","Brisbane"],          j:2, e:"Banyak orang salah mengira Sydney adalah ibukota Australia. Canberra dipilih sebagai ibukota pada 1908 sebagai kompromi antara Sydney dan Melbourne yang sama-sama ingin jadi ibukota." },
+  { b:"🔬 Sains",         q:"Gas apa yang paling banyak terkandung dalam atmosfer bumi?",                                                    o:["Oksigen","Karbon dioksida","Hidrogen","Nitrogen"],   j:3, e:"Nitrogen (N₂) menyumbang sekitar 78% atmosfer bumi, jauh melebihi oksigen (21%). Sisanya adalah argon, karbon dioksida, dan gas-gas lain." },
+  { b:"🏛️ Sejarah",       q:"Proklamasi kemerdekaan Indonesia dibacakan pada tanggal berapa?",                                               o:["16 Agustus 1945","17 Agustus 1945","18 Agustus 1945","19 Agustus 1945"], j:1, e:"Proklamasi kemerdekaan Indonesia dibacakan oleh Soekarno dan Mohammad Hatta pada 17 Agustus 1945 pukul 10.00 WIB di Jalan Pegangsaan Timur 56, Jakarta." },
+  { b:"🎨 Seni",          q:"Teknik melukis dengan cat berbahan minyak (oil paint) pertama kali dikembangkan secara meluas di wilayah mana?", o:["Italia","Prancis","Belanda/Flandria","Spanyol"],     j:2, e:"Teknik cat minyak dikembangkan secara meluas oleh pelukis Flemish (Belanda-Belgia) sekitar abad ke-15, terutama oleh Jan van Eyck. Teknik ini kemudian menyebar ke seluruh Eropa." },
+  { b:"🚀 Astronomi",     q:"Planet terkecil di tata surya kita adalah?",                                                                    o:["Mars","Merkurius","Venus","Pluto"],                  j:1, e:"Merkurius adalah planet terkecil di tata surya (sejak Pluto diklasifikasi ulang sebagai 'planet kerdil' pada 2006). Diameternya sekitar 4.879 km, sedikit lebih besar dari Bulan." },
+  { b:"💰 Ekonomi",       q:"Apa yang dimaksud dengan 'inflasi'?",                                                                           o:["Naiknya nilai mata uang","Turunnya harga barang secara umum","Naiknya harga barang secara umum","Bertambahnya cadangan devisa"], j:2, e:"Inflasi adalah kenaikan harga barang dan jasa secara umum dan terus-menerus dalam jangka waktu tertentu. Inflasi yang terlalu tinggi berbahaya bagi perekonomian karena menggerus daya beli masyarakat." },
+  { b:"📚 Sastra",        q:"Siapa penulis novel 'Harry Potter'?",                                                                           o:["Stephenie Meyer","J.R.R. Tolkien","C.S. Lewis","J.K. Rowling"], j:3, e:"J.K. Rowling menulis seri Harry Potter yang pertama kali terbit pada 1997. Seri ini terdiri dari 7 buku dan menjadi salah satu franchise buku terlaris sepanjang masa dengan lebih dari 500 juta kopi terjual." },
+  { b:"🎵 Musik",         q:"Alat musik gamelan berasal dari kebudayaan daerah mana di Indonesia?",                                          o:["Bali dan Jawa","Sumatera","Kalimantan","Sulawesi"],  j:0, e:"Gamelan adalah ansambel musik tradisional dari Jawa dan Bali yang didominasi alat musik perkusi seperti gong, kenong, saron, dan bonang. UNESCO menetapkan gamelan sebagai Warisan Budaya Takbenda pada 2021." },
+  { b:"🧬 Biologi",       q:"Berapa jumlah kromosom normal pada sel tubuh manusia?",                                                         o:["23","44","46","48"],                                j:2, e:"Sel tubuh manusia memiliki 46 kromosom yang tersusun dalam 23 pasang. Setiap pasang terdiri dari satu kromosom dari ayah dan satu dari ibu. Sel kelamin (sperma/sel telur) hanya memiliki 23 kromosom." },
+  { b:"🌐 Teknologi",     q:"Bahasa pemrograman Python pertama kali diciptakan oleh siapa?",                                                 o:["Linus Torvalds","Dennis Ritchie","Guido van Rossum","James Gosling"], j:2, e:"Guido van Rossum menciptakan Python pada akhir 1980-an dan merilis versi pertamanya pada 1991. Nama 'Python' terinspirasi dari acara komedi BBC 'Monty Python's Flying Circus', bukan dari ular." },
+  { b:"⚽ Olahraga",      q:"Negara mana yang paling banyak memenangkan Piala Dunia FIFA?",                                                  o:["Jerman","Argentina","Italia","Brasil"],              j:3, e:"Brasil adalah negara tersukses di Piala Dunia FIFA dengan 5 gelar juara (1958, 1962, 1970, 1994, 2002). Diikuti Jerman dan Italia dengan masing-masing 4 gelar." },
+  { b:"🏺 Sejarah Dunia", q:"Peradaban kuno mana yang membangun Piramida Agung Giza?",                                                      o:["Yunani Kuno","Mesopotamia","Mesir Kuno","Romawi"],   j:2, e:"Piramida Agung Giza dibangun oleh Mesir Kuno sekitar tahun 2560 SM sebagai makam Firaun Khufu. Piramida ini merupakan satu-satunya dari Tujuh Keajaiban Dunia Kuno yang masih berdiri hingga kini." },
+  { b:"🌿 Lingkungan",    q:"Lapisan ozon di atmosfer berfungsi untuk?",                                                                     o:["Menyerap CO₂","Menyaring sinar ultraviolet berbahaya","Menghasilkan oksigen","Mengatur suhu bumi"], j:1, e:"Lapisan ozon di stratosfir (15–35 km di atas bumi) menyerap sebagian besar radiasi ultraviolet (UV-B dan UV-C) dari matahari yang berbahaya bagi makhluk hidup, termasuk menyebabkan kanker kulit." },
+  { b:"🔢 Matematika",    q:"Berapa nilai π (Pi) yang paling umum digunakan (sampai 4 desimal)?",                                            o:["3,1315","3,1416","3,1514","3,1618"],                j:1, e:"Nilai Pi (π) yang umum digunakan adalah 3,1416 (atau lebih tepatnya 3,14159...). Pi adalah rasio keliling lingkaran terhadap diameternya dan merupakan bilangan irasional yang tak berulang." },
+  { b:"🎬 Film",          q:"Film Indonesia 'Laskar Pelangi' diadaptasi dari novel karya siapa?",                                            o:["Dee Lestari","Habiburrahman El Shirazy","Andrea Hirata","Tere Liye"], j:2, e:"Laskar Pelangi adalah novel karya Andrea Hirata yang diterbitkan pada 2005 dan diadaptasi menjadi film pada 2008 oleh sutradara Riri Riza. Novel ini menjadi salah satu buku Indonesia terlaris sepanjang masa." },
+  { b:"🧪 Kimia",         q:"Lambang kimia untuk emas adalah?",                                                                              o:["Ag","Pt","Au","Go"],                                j:2, e:"Simbol kimia emas adalah Au, berasal dari bahasa Latin 'Aurum'. Emas memiliki nomor atom 79 dan merupakan logam mulia yang tahan korosi dan sangat mudah dibentuk." },
+  { b:"🌏 Geografi",      q:"Sungai terpanjang di dunia adalah?",                                                                            o:["Amazon","Mississippi","Yangtze","Nil"],              j:3, e:"Sungai Nil di Afrika (6.650 km) secara tradisional dianggap sebagai sungai terpanjang di dunia, mengalir dari Afrika Tengah hingga Laut Mediterania. Meski ada penelitian yang mengklaim Amazon lebih panjang, Nil masih diakui secara umum." },
+  { b:"💡 Pengetahuan Umum", q:"Berapa jumlah negara anggota PBB (Perserikatan Bangsa-Bangsa) saat ini?",                                  o:["179","193","197","204"],                             j:1, e:"PBB saat ini memiliki 193 negara anggota. Indonesia menjadi anggota PBB pada 28 September 1950. Vatikan dan Palestina adalah pengamat non-anggota, sementara Kosovo dan Taiwan bukan anggota PBB." },
+  { b:"🏥 Kesehatan",     q:"Vitamin D terutama diproduksi tubuh melalui apa?",                                                              o:["Konsumsi sayuran hijau","Paparan sinar matahari","Minum susu","Aktivitas fisik"], j:1, e:"Tubuh memproduksi Vitamin D saat kulit terpapar sinar UVB dari matahari. Vitamin D penting untuk penyerapan kalsium, kesehatan tulang, dan sistem imun. Kekurangan vitamin D bisa menyebabkan rakhitis dan osteoporosis." },
+  { b:"🎓 Pendidikan",    q:"Universitas tertua di dunia yang masih beroperasi adalah?",                                                     o:["Universitas Oxford","Universitas Bologna","Universitas Paris","Universitas Al-Qarawiyyin"], j:3, e:"Universitas Al-Qarawiyyin di Fez, Maroko, didirikan pada 859 M dan diakui sebagai universitas tertua yang masih beroperasi di dunia oleh Guinness World Records. Universitas Bologna (1088) sering disebut sebagai universitas tertua di Eropa." },
+];
+
+let cur = 0, score = 0, answered = false, ua = [];
+
+function pad(n) { return n < 10 ? '0'+n : ''+n; }
+
+function updateHUD() {
+  document.getElementById('h-score').textContent = pad(score);
+  document.getElementById('h-q').textContent = pad(Math.min(cur+1, soal.length));
+  const pct = Math.round(cur / soal.length * 100);
+  document.getElementById('pbar').style.width = pct + '%';
+  document.getElementById('p-left').textContent = cur + ' / ' + soal.length;
+  document.getElementById('p-pct').textContent = pct + '%';
+
+  const dots = document.getElementById('pdots');
+  dots.innerHTML = soal.map((_,i) => {
+    let cls = '';
+    if (i < ua.length) cls = ua[i].benar ? 'ok' : 'no';
+    else if (i === cur) cls = 'now';
+    return `<div class="pdot ${cls}"></div>`;
+  }).join('');
+}
+
+function render() {
+  if (cur >= soal.length) { renderResult(); return; }
+  updateHUD();
+  answered = false;
+  const q = soal[cur];
+  document.getElementById('card').innerHTML = `
+    <div class="card-header">
+      <div class="badge">${q.b}</div>
+      <div class="q-id">#${pad(cur+1)} / ${pad(soal.length)}</div>
+    </div>
+    <div class="question">${q.q}</div>
+    <div class="options" id="opts">
+      ${q.o.map((o,i) => `
+        <button class="opt" onclick="pilih(${i})">
+          <span class="key">${String.fromCharCode(65+i)}</span>${o}
+        </button>`).join('')}
+    </div>
+    <div class="card-footer">
+      <div class="streak-wrap">
+        <div class="streak-label">Benar</div>
+        <div class="streak-val">${pad(score)}</div>
+      </div>
+      <button class="btn-next" id="btn" disabled onclick="next()">
+        ${cur < soal.length-1 ? 'Lanjut →' : 'Lihat Hasil →'}
+      </button>
+    </div>
+  `;
+}
+
+function pilih(i) {
+  if (answered) return;
+  answered = true;
+  const q = soal[cur];
+  document.querySelectorAll('.opt').forEach(o => o.disabled = true);
+  const benar = i === q.j;
+  document.querySelectorAll('.opt')[i].classList.add(benar ? 'correct' : 'wrong');
+  if (!benar) document.querySelectorAll('.opt')[q.j].classList.add('correct');
+  if (benar) { score++; document.getElementById('h-score').textContent = pad(score); }
+  ua.push({ benar, jaw: q.o[i], kun: q.o[q.j] });
+  updateHUD();
+
+  const expl = document.createElement('div');
+  expl.className = 'expl';
+  expl.innerHTML = `<strong>${benar ? '✅ Benar!' : '❌ Kurang tepat.'}</strong> ${q.e}`;
+  document.getElementById('opts').after(expl);
+  document.getElementById('btn').disabled = false;
+}
+
+function next() { cur++; render(); }
+
+function renderResult() {
+  document.getElementById('pbar').style.width = '100%';
+  document.getElementById('p-left').textContent = soal.length + ' / ' + soal.length;
+  document.getElementById('p-pct').textContent = '100%';
+  document.getElementById('pdots').innerHTML = ua.map(a =>
+    `<div class="pdot ${a.benar?'ok':'no'}"></div>`).join('');
+
+  const pct = Math.round(score / soal.length * 100);
+  const wrong = soal.length - score;
+  let medal, msg, sub;
+  if (pct === 100) { medal='🏆'; msg='SEMPURNA!'; sub='Kamu menjawab semua 20 soal dengan benar. Luar biasa!'; }
+  else if (pct >= 85) { medal='🥇'; msg='SANGAT BAGUS!'; sub='Wawasanmu sangat luas. Hampir sempurna!'; }
+  else if (pct >= 70) { medal='🥈'; msg='BAGUS!'; sub='Pengetahuanmu solid di banyak bidang. Terus tingkatkan!'; }
+  else if (pct >= 50) { medal='🥉'; msg='LUMAYAN!'; sub='Kamu melewati setengah. Masih banyak ruang untuk berkembang!'; }
+  else               { medal='📖'; msg='AYO BELAJAR LAGI!'; sub='Setiap pertanyaan yang salah adalah ilmu baru. Coba lagi!'; }
+
+  document.getElementById('card').innerHTML = `
+    <div class="result">
+      <div class="result-hero">
+        <span class="result-medal">${medal}</span>
+        <div class="result-score-wrap">
+          <div class="result-score">${score}</div>
+          <div class="result-denom">/ ${soal.length}</div>
+        </div>
+        <span class="result-pct">${pct}% BENAR</span>
+        <div class="result-msg">${msg}</div>
+        <div class="result-sub">${sub}</div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-box">
+          <span class="stat-val" style="color:var(--correct)">${score}</span>
+          <span class="stat-lbl">Benar</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-val" style="color:var(--wrong)">${wrong}</span>
+          <span class="stat-lbl">Salah</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-val">${pct}%</span>
+          <span class="stat-lbl">Akurasi</span>
+        </div>
+      </div>
+
+      <button class="review-toggle" onclick="toggleReview(this)">▶ Lihat Jawaban Lengkap</button>
+      <div class="review-list" id="rev-list">
+        ${ua.map((a,i) => `
+          <div class="r-row">
+            <div class="r-num">${pad(i+1)}</div>
+            <div class="r-body">
+              <b>${soal[i].b}</b>
+              <p>${a.benar
+                ? `<span class="ok-ans">✓ ${a.kun}</span>`
+                : `<span class="bad-ans">✗ ${a.jaw}</span> → <span class="ok-ans">${a.kun}</span>`}</p>
+            </div>
+          </div>`).join('')}
+      </div>
+
+      <button class="btn-reset" onclick="reset()">↺ Main Lagi dari Awal</button>
+    </div>
+  `;
+}
+
+function toggleReview(btn) {
+  const list = document.getElementById('rev-list');
+  list.classList.toggle('open');
+  btn.textContent = list.classList.contains('open') ? '▼ Sembunyikan Jawaban' : '▶ Lihat Jawaban Lengkap';
+}
+
+function reset() {
+  cur = 0; score = 0; answered = false; ua = [];
+  document.getElementById('h-score').textContent = '00';
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
