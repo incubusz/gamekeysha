@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kuis Pengetahuan Umum</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a1628;
+    --surface: #0f1f3d;
+    --card: #132244;
+    --accent: #00d4aa;
+    --gold: #fbbf24;
+    --text: #e8f0fe;
+    --muted: #6b83a8;
+    --border: #1e3a5f;
+    --correct: #00d4aa;
+    --correct-bg: rgba(0,212,170,0.1);
+    --wrong: #ff6b6b;
+    --wrong-bg: rgba(255,107,107,0.1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -200px; left: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,212,170,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -150px; right: -150px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(251,191,36,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .wrapper { width: 100%; max-width: 650px; position: relative; }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .logo em { color: var(--accent); font-style: italic; }
+
+  .score-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .score-header span { color: var(--gold); }
+
+  /* Progress */
+  .progress-bar-wrap {
+    background: var(--surface);
+    border-radius: 99px;
+    height: 6px;
+    margin-bottom: 28px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), #00b8d4);
+    border-radius: 99px;
+    transition: width 0.5s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* Card */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+    animation: cardIn 0.4s cubic-bezier(.4,0,.2,1);
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), #00b8d4, var(--gold));
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(16px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .badge {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(0,212,170,0.1);
+    border: 1px solid rgba(0,212,170,0.2);
+    border-radius: 99px;
+    padding: 5px 14px;
+  }
+
+  .q-counter {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .question {
+    font-family: 'Playfair Display', serif;
+    font-size: 23px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--text);
+    margin-bottom: 32px;
+  }
+
+  .options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 0;
+  }
+
+  .opt {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    line-height: 1.4;
+  }
+
+  .opt:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: rgba(0,212,170,0.06);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  }
+
+  .opt:disabled { cursor: default; }
+
+  .opt.correct {
+    border-color: var(--correct);
+    background: var(--correct-bg);
+    color: var(--correct);
+    transform: none;
+  }
+
+  .opt.wrong {
+    border-color: var(--wrong);
+    background: var(--wrong-bg);
+    color: var(--wrong);
+    transform: none;
+  }
+
+  .opt .key {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+
+  .opt.correct .key { background: var(--correct); color: var(--bg); }
+  .opt.wrong   .key { background: var(--wrong);   color: #fff; }
+
+  .explanation {
+    grid-column: 1 / -1;
+    padding: 16px 18px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--muted);
+    animation: cardIn 0.3s ease;
+    margin-top: 4px;
+  }
+
+  .explanation strong { color: var(--text); }
+
+  .footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .streak {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .streak-dots {
+    display: flex;
+    gap: 4px;
+  }
+
+  .streak-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+  .streak-dot.hit { background: var(--accent); }
+  .streak-dot.miss { background: var(--wrong); }
+
+  .btn-next {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, var(--accent), #00b8d4);
+    color: var(--bg);
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(0,212,170,0.3);
+  }
+
+  .btn-next:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,212,170,0.4);
+  }
+
+  .btn-next:disabled {
+    opacity: 0.25;
+    cursor: default;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* Result */
+  .result-screen { animation: cardIn 0.4s ease; }
+
+  .result-top {
+    text-align: center;
+    padding: 12px 0 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+
+  .trophy { font-size: 48px; margin-bottom: 12px; display: block; }
+
+  .big-score {
+    font-family: 'Playfair Display', serif;
+    font-size: 64px;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .result-msg {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .result-sub {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+    max-width: 380px;
+    margin: 0 auto;
+  }
+
+  .review-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+
+  .review-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    font-size: 13px;
+  }
+
+  .r-icon { font-size: 16px; flex-shrink: 0; }
+  .r-info { flex: 1; color: var(--muted); }
+  .r-info b { color: var(--text); display: block; margin-bottom: 2px; }
+
+  .btn-reset {
+    width: 100%;
+    background: transparent;
+    border: 1.5px solid var(--accent);
+    color: var(--accent);
+    border-radius: 14px;
+    padding: 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-reset:hover {
+    background: var(--accent);
+    color: var(--bg);
+    box-shadow: 0 8px 24px rgba(0,212,170,0.3);
+    transform: translateY(-2px);
+  }
+
+  @media (max-width: 480px) {
+    .options { grid-template-columns: 1fr; }
+    .card { padding: 24px; }
+    .question { font-size: 19px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <header>
+    <div class="logo">Kuis<em>.</em></div>
+    <div class="score-header">⭐ Skor: <span id="sc-head">0</span></div>
+  </header>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar" id="pbar" style="width:0%"></div>
+  </div>
+  <div class="card" id="card"></div>
+</div>
+
+<script>
+const soal = [
+  {
+    bidang: "🎵 Musik",
+    pertanyaan: "Alat musik tradisional Indonesia apa yang terbuat dari bambu dan dimainkan dengan cara ditiup, khas dari Sunda?",
+    opsi: ["Angklung", "Suling", "Kolintang", "Sasando"],
+    jawaban: 1,
+    penjelasan: "Suling adalah alat musik tiup bambu khas Sunda. Berbeda dengan angklung yang digoyangkan, suling dimainkan seperti seruling. Sasando berasal dari NTT, sementara kolintang dari Sulawesi Utara."
+  },
+  {
+    bidang: "🏅 Olahraga",
+    pertanyaan: "Di Olimpiade modern, medali emas pertama kali dibuat dari emas murni pada tahun berapa terakhir kalinya?",
+    opsi: ["1896", "1904", "1912", "1920"],
+    jawaban: 2,
+    penjelasan: "Medali emas murni terakhir dibagikan pada Olimpiade Stockholm 1912. Sejak itu, medali 'emas' hanya dilapisi emas tipis (minimal 6 gram) di atas perak, karena alasan biaya dan kepraktisan."
+  },
+  {
+    bidang: "🌿 Lingkungan",
+    pertanyaan: "Hutan hujan Amazon menghasilkan sekitar berapa persen oksigen bumi?",
+    opsi: ["10%", "20%", "30%", "40%"],
+    jawaban: 1,
+    penjelasan: "Amazon sering disebut 'paru-paru bumi' dan menghasilkan sekitar 20% oksigen dunia. Namun para ilmuwan mencatat bahwa hutan ini juga mengonsumsi oksigen dalam jumlah hampir sama melalui respirasi organisme di dalamnya."
+  },
+  {
+    bidang: "🏛️ Filsafat",
+    pertanyaan: "Siapa filsuf yang terkenal dengan ungkapan 'Cogito, ergo sum' (Aku berpikir, maka aku ada)?",
+    opsi: ["Plato", "Immanuel Kant", "René Descartes", "Aristoteles"],
+    jawaban: 2,
+    penjelasan: "René Descartes (1596–1650), filsuf Prancis yang dikenal sebagai bapak filsafat modern, mencetuskan ungkapan 'Cogito, ergo sum' dalam karyanya Discourse on the Method (1637) sebagai fondasi kepastian pengetahuan."
+  },
+  {
+    bidang: "💻 Matematika",
+    pertanyaan: "Angka dalam barisan Fibonacci didapat dengan cara menjumlahkan dua angka sebelumnya. Angka ke-10 dalam barisan Fibonacci adalah?",
+    opsi: ["34", "44", "55", "65"],
+    jawaban: 2,
+    penjelasan: "Barisan Fibonacci: 1, 1, 2, 3, 5, 8, 13, 21, 34, 55. Angka ke-10 adalah 55. Barisan ini ditemukan oleh matematikawan Italia Leonardo Fibonacci dan muncul di banyak fenomena alam seperti pola spiral kerang dan bunga."
+  }
+];
+
+let current = 0, score = 0, answered = false, userAnswers = [];
+
+function updateProgress() {
+  document.getElementById('pbar').style.width = (current / soal.length * 100) + '%';
+  document.getElementById('sc-head').textContent = score;
+}
+
+function streakHTML() {
+  return `<div class="streak-dots">${userAnswers.map(a =>
+    `<div class="streak-dot ${a.benar ? 'hit' : 'miss'}"></div>`).join('')}
+    ${Array(soal.length - userAnswers.length).fill('<div class="streak-dot"></div>').join('')}
+  </div>`;
+}
+
+function render() {
+  if (current >= soal.length) { renderResult(); return; }
+  updateProgress();
+  answered = false;
+  const q = soal[current];
+  card.innerHTML = `
+    <div class="top-row">
+      <div class="badge">${q.bidang}</div>
+      <div class="q-counter">${current + 1} / ${soal.length}</div>
+    </div>
+    <div class="question">${q.pertanyaan}</div>
+    <div class="options" id="opts">
+      ${q.opsi.map((o, i) => `
+        <button class="opt" onclick="pilih(${i})">
+          <span class="key">${String.fromCharCode(65+i)}</span>
+          ${o}
+        </button>`).join('')}
+    </div>
+    <div class="footer">
+      <div class="streak">${streakHTML()}</div>
+      <button class="btn-next" id="btnNext" disabled onclick="next()">
+        Lanjut <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  `;
+}
+
+function pilih(i) {
+  if (answered) return;
+  answered = true;
+  const q = soal[current];
+  const opts = document.querySelectorAll('.opt');
+  opts.forEach(o => o.disabled = true);
+  const benar = i === q.jawaban;
+  opts[i].classList.add(benar ? 'correct' : 'wrong');
+  if (!benar) opts[q.jawaban].classList.add('correct');
+  if (benar) { score++; document.getElementById('sc-head').textContent = score; }
+  userAnswers.push({ benar, jawaban: q.opsi[i], kunci: q.opsi[q.jawaban] });
+
+  const exp = document.createElement('div');
+  exp.className = 'explanation';
+  exp.innerHTML = `<strong>${benar ? '✅ Benar!' : '❌ Kurang tepat.'}</strong> ${q.penjelasan}`;
+  document.getElementById('opts').appendChild(exp);
+  document.getElementById('btnNext').disabled = false;
+}
+
+function next() { current++; render(); }
+
+function renderResult() {
+  document.getElementById('pbar').style.width = '100%';
+  const pct = Math.round(score / soal.length * 100);
+  let trophy, msg, sub;
+  if (pct === 100) { trophy = '🏆'; msg = 'Nilai Sempurna!'; sub = 'Kamu menjawab semua soal dengan benar. Wawasanmu luar biasa!'; }
+  else if (pct >= 80) { trophy = '🥇'; msg = 'Luar Biasa!'; sub = 'Hampir sempurna! Pengetahuanmu sangat baik di berbagai bidang.'; }
+  else if (pct >= 60) { trophy = '🥈'; msg = 'Bagus!'; sub = 'Kamu punya dasar yang kuat. Terus perluas wawasanmu!'; }
+  else { trophy = '📖'; msg = 'Tetap Semangat!'; sub = 'Setiap pertanyaan adalah kesempatan belajar. Coba lagi!'; }
+
+  document.getElementById('card').innerHTML = `
+    <div class="result-screen">
+      <div class="result-top">
+        <span class="trophy">${trophy}</span>
+        <div class="big-score">${score}/${soal.length}</div>
+        <div class="result-msg">${msg}</div>
+        <div class="result-sub">${sub}</div>
+      </div>
+      <div class="review-grid">
+        ${userAnswers.map((a, i) => `
+          <div class="review-row">
+            <div class="r-icon">${a.benar ? '✅' : '❌'}</div>
+            <div class="r-info">
+              <b>${soal[i].bidang}</b>
+              ${a.benar ? `Benar — ${a.kunci}` : `Jawabanmu: ${a.jawaban} · Kunci: <span style="color:var(--correct)">${a.kunci}</span>`}
+            </div>
+          </div>`).join('')}
+      </div>
+      <button class="btn-reset" onclick="reset()">↺ Main Lagi</button>
+    </div>
+  `;
+}
+
+function reset() { current = 0; score = 0; answered = false; userAnswers = []; render(); }
+
+const card = document.getElementById('card');
+render();
+</script>
+</body>
+</html>

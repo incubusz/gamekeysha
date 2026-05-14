@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kuis Pengetahuan Umum</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --card: #ffffff;
+    --ink: #1a1714;
+    --accent: #d63b2f;
+    --accent2: #2356c7;
+    --muted: #8a857c;
+    --border: #e0d9cf;
+    --correct: #1a7a4a;
+    --correct-bg: #e8f5ee;
+    --wrong: #c0392b;
+    --wrong-bg: #fcecea;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background-image: repeating-linear-gradient(
+      0deg, transparent, transparent 39px, rgba(0,0,0,0.04) 39px, rgba(0,0,0,0.04) 40px
+    );
+  }
+
+  .wrapper {
+    width: 100%;
+    max-width: 640px;
+  }
+
+  header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 14px;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    line-height: 1;
+  }
+
+  .logo span { color: var(--accent); }
+
+  .progress-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
+  .progress-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .progress-track {
+    display: flex;
+    gap: 5px;
+  }
+
+  .pip {
+    width: 32px;
+    height: 5px;
+    border-radius: 2px;
+    background: var(--border);
+    transition: background 0.3s;
+  }
+  .pip.done { background: var(--ink); }
+  .pip.active { background: var(--accent); }
+
+  .card {
+    background: var(--card);
+    border: 2px solid var(--ink);
+    border-radius: 4px;
+    box-shadow: 5px 5px 0 var(--ink);
+    padding: 36px;
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--card);
+    background: var(--accent);
+    padding: 4px 12px;
+    border-radius: 2px;
+    margin-bottom: 20px;
+  }
+
+  .q-num {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+
+  .question {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 0.04em;
+    line-height: 1.25;
+    margin-bottom: 28px;
+    color: var(--ink);
+  }
+
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .opt {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 13px 18px;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--ink);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14.5px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s, transform 0.1s;
+  }
+
+  .opt:hover:not(:disabled) {
+    border-color: var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+    transform: translate(-1px, -1px);
+  }
+
+  .opt:disabled { cursor: default; }
+
+  .opt.correct {
+    border-color: var(--correct);
+    background: var(--correct-bg);
+    color: var(--correct);
+    box-shadow: 3px 3px 0 var(--correct);
+  }
+
+  .opt.wrong {
+    border-color: var(--wrong);
+    background: var(--wrong-bg);
+    color: var(--wrong);
+  }
+
+  .opt .key {
+    width: 28px;
+    height: 28px;
+    border-radius: 3px;
+    border: 1.5px solid currentColor;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0;
+    transition: all 0.15s;
+  }
+
+  .explanation {
+    margin-top: 18px;
+    padding: 14px 16px;
+    border-left: 4px solid var(--accent2);
+    background: rgba(35,86,199,0.05);
+    border-radius: 0 4px 4px 0;
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: #4a4540;
+    animation: slideIn 0.3s ease;
+  }
+
+  .explanation strong { color: var(--ink); font-weight: 700; }
+
+  .footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  .score-mini {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .score-mini span { color: var(--ink); font-weight: 700; }
+
+  .btn-next {
+    background: var(--ink);
+    color: var(--bg);
+    border: 2px solid var(--ink);
+    border-radius: 4px;
+    padding: 10px 22px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 var(--accent);
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+
+  .btn-next:hover:not(:disabled) {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 var(--accent);
+  }
+
+  .btn-next:disabled {
+    opacity: 0.3;
+    cursor: default;
+    box-shadow: none;
+  }
+
+  /* Result */
+  .result-screen { animation: slideIn 0.4s ease; }
+
+  .result-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .big-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 80px;
+    line-height: 1;
+    color: var(--accent);
+  }
+
+  .result-info { flex: 1; }
+
+  .result-msg {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+
+  .result-sub {
+    font-size: 13.5px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .review-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .review-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    font-size: 13px;
+  }
+
+  .review-icon { font-size: 15px; margin-top: 1px; }
+  .review-text { color: var(--muted); line-height: 1.5; }
+  .review-text strong { color: var(--ink); display: block; font-size: 13.5px; margin-bottom: 1px; }
+
+  .btn-reset {
+    width: 100%;
+    background: transparent;
+    border: 2px solid var(--ink);
+    color: var(--ink);
+    border-radius: 4px;
+    padding: 13px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    box-shadow: 4px 4px 0 var(--accent);
+    transition: transform 0.1s, box-shadow 0.1s, background 0.15s, color 0.15s;
+  }
+
+  .btn-reset:hover {
+    background: var(--ink);
+    color: var(--bg);
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--accent);
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <header>
+    <div class="logo">KUIS<span>.</span></div>
+    <div class="progress-wrap">
+      <div class="progress-label" id="prog-label">Soal 1 / 5</div>
+      <div class="progress-track" id="progress"></div>
+    </div>
+  </header>
+  <div class="card" id="card"></div>
+</div>
+
+<script>
+const soal = [
+  {
+    bidang: "🧬 Biologi",
+    pertanyaan: "Organ tubuh manusia mana yang bisa beregenerasi hampir sepenuhnya?",
+    opsi: ["Jantung", "Paru-paru", "Hati (Liver)", "Ginjal"],
+    jawaban: 2,
+    penjelasan: "Hati (liver) adalah satu-satunya organ dalam tubuh manusia yang mampu beregenerasi. Bahkan jika 70% jaringannya diangkat, hati dapat tumbuh kembali ke ukuran normalnya dalam beberapa minggu."
+  },
+  {
+    bidang: "🌐 Ekonomi",
+    pertanyaan: "Istilah 'invisible hand' dalam ekonomi pertama kali diperkenalkan oleh siapa?",
+    opsi: ["John Maynard Keynes", "Karl Marx", "Adam Smith", "Milton Friedman"],
+    jawaban: 2,
+    penjelasan: "Adam Smith memperkenalkan konsep 'invisible hand' dalam bukunya The Wealth of Nations (1776). Konsep ini menggambarkan bagaimana individu yang mengejar kepentingan pribadi secara tidak sengaja menguntungkan masyarakat luas."
+  },
+  {
+    bidang: "🚀 Luar Angkasa",
+    pertanyaan: "Planet mana di tata surya kita yang memiliki jumlah bulan (satelit alami) terbanyak?",
+    opsi: ["Jupiter", "Saturnus", "Uranus", "Neptunus"],
+    jawaban: 1,
+    penjelasan: "Saturnus memegang rekor dengan lebih dari 140 bulan yang telah dikonfirmasi per 2023–2024, mengalahkan Jupiter. Banyak di antaranya baru ditemukan dalam beberapa tahun terakhir melalui teleskop canggih."
+  },
+  {
+    bidang: "📚 Sastra",
+    pertanyaan: "Novel 'Bumi Manusia' karya Pramoedya Ananta Toer merupakan bagian pertama dari tetralogi yang dikenal dengan nama apa?",
+    opsi: ["Tetralogi Pulau Buru", "Tetralogi Nusantara", "Tetralogi Pram", "Tetralogi Indonesia"],
+    jawaban: 0,
+    penjelasan: "Bumi Manusia adalah buku pertama dari Tetralogi Pulau Buru, dinamai dari tempat Pramoedya menulis karya-karyanya saat diasingkan. Tetralogi ini terdiri dari: Bumi Manusia, Anak Semua Bangsa, Jejak Langkah, dan Rumah Kaca."
+  },
+  {
+    bidang: "⚗️ Kimia",
+    pertanyaan: "Berapa suhu (°C) di mana air murni mendidih pada tekanan 1 atmosfer?",
+    opsi: ["90°C", "95°C", "99°C", "100°C"],
+    jawaban: 3,
+    penjelasan: "Air murni mendidih tepat pada 100°C (212°F) pada tekanan standar 1 atmosfer (101.325 Pa). Titik didih ini bisa berubah jika tekanan berbeda — misalnya di pegunungan tinggi, air mendidih di bawah 100°C karena tekanan udara lebih rendah."
+  }
+];
+
+let current = 0, score = 0, answered = false, userAnswers = [];
+
+const card = document.getElementById('card');
+const progressEl = document.getElementById('progress');
+const progLabel = document.getElementById('prog-label');
+
+function buildProgress() {
+  progressEl.innerHTML = '';
+  soal.forEach((_, i) => {
+    const pip = document.createElement('div');
+    pip.className = 'pip' + (i < current ? ' done' : i === current ? ' active' : '');
+    progressEl.appendChild(pip);
+  });
+  if (current < soal.length) {
+    progLabel.textContent = `Soal ${current + 1} / ${soal.length}`;
+  } else {
+    progLabel.textContent = `Selesai!`;
+  }
+}
+
+function render() {
+  if (current >= soal.length) { renderResult(); return; }
+  buildProgress();
+  answered = false;
+  const q = soal[current];
+  card.innerHTML = `
+    <div class="badge">${q.bidang}</div>
+    <div class="q-num">Pertanyaan ${current + 1} dari ${soal.length}</div>
+    <div class="question">${q.pertanyaan}</div>
+    <div class="options" id="opts">
+      ${q.opsi.map((o, i) => `
+        <button class="opt" data-i="${i}" onclick="pilih(${i})">
+          <span class="key">${String.fromCharCode(65+i)}</span>
+          ${o}
+        </button>`).join('')}
+    </div>
+    <div class="footer">
+      <div class="score-mini">Skor: <span id="sc">${score}</span> / ${soal.length}</div>
+      <button class="btn-next" id="btnNext" disabled onclick="next()">LANJUT →</button>
+    </div>
+  `;
+}
+
+function pilih(i) {
+  if (answered) return;
+  answered = true;
+  const q = soal[current];
+  const opts = document.querySelectorAll('.opt');
+  opts.forEach(o => o.disabled = true);
+  const chosen = opts[i];
+  const correct = opts[q.jawaban];
+  if (i === q.jawaban) { chosen.classList.add('correct'); score++; document.getElementById('sc').textContent = score; }
+  else { chosen.classList.add('wrong'); correct.classList.add('correct'); }
+  userAnswers.push({ benar: i === q.jawaban, jawaban: q.opsi[i], kunci: q.opsi[q.jawaban] });
+  const exp = document.createElement('div');
+  exp.className = 'explanation';
+  exp.innerHTML = `<strong>💡 Penjelasan —</strong> ${q.penjelasan}`;
+  document.getElementById('opts').after(exp);
+  document.getElementById('btnNext').disabled = false;
+}
+
+function next() { current++; render(); }
+
+function renderResult() {
+  buildProgress();
+  const pct = Math.round(score / soal.length * 100);
+  let msg, sub;
+  if (pct === 100) { msg = "NILAI SEMPURNA!"; sub = "Luar biasa — kamu menjawab semua soal dengan benar!"; }
+  else if (pct >= 80) { msg = "HAMPIR SEMPURNA!"; sub = "Wawasanmu sangat tajam. Sedikit lagi dan kamu bisa 100%!"; }
+  else if (pct >= 60) { msg = "LUMAYAN BAGUS!"; sub = "Pengetahuanmu cukup solid. Terus asah dengan belajar lebih banyak!"; }
+  else { msg = "TETAP SEMANGAT!"; sub = "Masih banyak hal menarik untuk dipelajari. Coba lagi, yuk!"; }
+
+  const reviewHTML = userAnswers.map((a, i) => `
+    <div class="review-item">
+      <div class="review-icon">${a.benar ? '✅' : '❌'}</div>
+      <div class="review-text">
+        <strong>${soal[i].bidang}</strong>
+        ${a.benar ? `Benar — ${a.kunci}` : `Jawabanmu: ${a.jawaban} · Kunci: <span style="color:var(--correct);font-weight:600">${a.kunci}</span>`}
+      </div>
+    </div>`).join('');
+
+  card.innerHTML = `
+    <div class="result-screen">
+      <div class="result-header">
+        <div class="big-score">${score}/${soal.length}</div>
+        <div class="result-info">
+          <div class="result-msg">${msg}</div>
+          <div class="result-sub">${sub}</div>
+        </div>
+      </div>
+      <div class="review-list">${reviewHTML}</div>
+      <button class="btn-reset" onclick="reset()">↺ MAIN LAGI</button>
+    </div>
+  `;
+}
+
+function reset() { current = 0; score = 0; answered = false; userAnswers = []; render(); }
+
+render();
+</script>
+</body>
+</html>

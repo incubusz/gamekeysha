@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kuis Pengetahuan Umum</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fdf6ee;
+    --card: #fffbf5;
+    --ink: #1c1410;
+    --rust: #c1440e;
+    --teal: #0e7c7b;
+    --sand: #e8dfd0;
+    --muted: #9a8878;
+    --border: #ddd0bc;
+    --correct: #0e7c7b;
+    --correct-bg: #e6f4f4;
+    --wrong: #c1440e;
+    --wrong-bg: #faeae4;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Outfit', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  /* subtle dot grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(var(--border) 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+    opacity: 0.6;
+  }
+
+  .wrapper { width: 100%; max-width: 640px; position: relative; }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .logo {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+  }
+
+  .logo span { color: var(--rust); font-style: italic; }
+
+  .pill-score {
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 99px;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .pill-score b { color: #fbbf24; }
+
+  /* ── Progress ── */
+  .steps {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 22px;
+  }
+
+  .step {
+    flex: 1;
+    height: 6px;
+    border-radius: 99px;
+    background: var(--sand);
+    transition: background 0.4s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .step.done { background: var(--teal); }
+  .step.active::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, var(--teal) 60%, var(--sand));
+    animation: pulse-step 1.2s ease-in-out infinite alternate;
+  }
+
+  @keyframes pulse-step {
+    from { opacity: 0.6; } to { opacity: 1; }
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 38px;
+    box-shadow: 0 2px 0 var(--border), 0 8px 32px rgba(28,20,16,0.06);
+    animation: pop 0.35s cubic-bezier(.34,1.56,.64,1);
+  }
+
+  @keyframes pop {
+    from { opacity: 0; transform: scale(0.96) translateY(10px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 22px;
+  }
+
+  .badge {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--rust);
+    border: 1.5px solid var(--rust);
+    border-radius: 6px;
+    padding: 4px 12px;
+  }
+
+  .q-of {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  .question {
+    font-family: 'Fraunces', serif;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--ink);
+    margin-bottom: 28px;
+  }
+
+  /* ── Options ── */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+
+  .opt {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.18s, background 0.18s, transform 0.15s, box-shadow 0.18s;
+  }
+
+  .opt:hover:not(:disabled) {
+    border-color: var(--teal);
+    background: var(--correct-bg);
+    transform: translateX(4px);
+  }
+
+  .opt:disabled { cursor: default; transform: none !important; }
+
+  .opt.correct {
+    border-color: var(--correct);
+    background: var(--correct-bg);
+    color: var(--correct);
+    font-weight: 600;
+  }
+
+  .opt.wrong {
+    border-color: var(--wrong);
+    background: var(--wrong-bg);
+    color: var(--wrong);
+  }
+
+  .key {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: var(--sand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+    font-family: 'Fraunces', serif;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .opt.correct .key { background: var(--correct); color: #fff; }
+  .opt.wrong   .key { background: var(--wrong); color: #fff; }
+
+  /* ── Explanation ── */
+  .expl {
+    margin-top: 14px;
+    padding: 16px 18px;
+    border-radius: 12px;
+    background: var(--sand);
+    border-left: 4px solid var(--teal);
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: #5a4a3a;
+    animation: pop 0.3s ease;
+  }
+
+  .expl strong { color: var(--ink); }
+
+  /* ── Footer ── */
+  .footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 26px;
+    padding-top: 22px;
+    border-top: 1.5px dashed var(--border);
+  }
+
+  .history {
+    display: flex;
+    gap: 5px;
+  }
+
+  .h-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--sand);
+    transition: background 0.3s;
+  }
+
+  .h-dot.ok   { background: var(--teal); }
+  .h-dot.no   { background: var(--rust); }
+  .h-dot.cur  { background: var(--ink); opacity: 0.25; }
+
+  .btn-next {
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    border-radius: 12px;
+    padding: 12px 26px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+  }
+
+  .btn-next:hover:not(:disabled) {
+    background: var(--teal);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(14,124,123,0.25);
+  }
+
+  .btn-next:disabled { opacity: 0.25; cursor: default; }
+
+  /* ── Result ── */
+  .result { animation: pop 0.4s ease; text-align: center; }
+
+  .r-medal { font-size: 56px; margin-bottom: 10px; display: block; }
+
+  .r-score {
+    font-family: 'Fraunces', serif;
+    font-size: 68px;
+    font-weight: 900;
+    font-style: italic;
+    color: var(--rust);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .r-pct {
+    font-size: 14px;
+    color: var(--muted);
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  .r-msg {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+
+  .r-sub {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 28px;
+  }
+
+  .r-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+    margin-bottom: 24px;
+  }
+
+  .r-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    font-size: 13px;
+    background: var(--bg);
+  }
+
+  .r-row b { display: block; color: var(--ink); margin-bottom: 2px; font-size: 13.5px; }
+  .r-row p { color: var(--muted); line-height: 1.5; }
+
+  .btn-reset {
+    width: 100%;
+    border: 2px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    border-radius: 14px;
+    padding: 14px;
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 700;
+    font-style: italic;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.01em;
+  }
+
+  .btn-reset:hover {
+    background: var(--ink);
+    color: var(--bg);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(28,20,16,0.15);
+  }
+
+  @media (max-width: 480px) {
+    .card { padding: 24px; }
+    .question { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <header>
+    <div class="logo">Quiz<span>!</span></div>
+    <div class="pill-score">Skor: <b id="sc">0</b></div>
+  </header>
+  <div class="steps" id="steps"></div>
+  <div class="card" id="card"></div>
+</div>
+
+<script>
+const soal = [
+  {
+    bidang: "🗺️ Geografi",
+    pertanyaan: "Selat mana yang memisahkan Pulau Sumatera dan Pulau Jawa?",
+    opsi: ["Selat Lombok", "Selat Bali", "Selat Sunda", "Selat Malaka"],
+    jawaban: 2,
+    penjelasan: "Selat Sunda memisahkan Pulau Sumatera dan Pulau Jawa. Di sinilah letak Gunung Krakatau yang terkenal. Selat Malaka ada di utara Sumatera, sementara Selat Lombok dan Bali ada di timur Jawa."
+  },
+  {
+    bidang: "🧪 Fisika",
+    pertanyaan: "Siapa ilmuwan yang pertama kali merumuskan Hukum Gravitasi Universal?",
+    opsi: ["Albert Einstein", "Galileo Galilei", "Isaac Newton", "Nikola Tesla"],
+    jawaban: 2,
+    penjelasan: "Isaac Newton merumuskan Hukum Gravitasi Universal pada tahun 1687 dalam karyanya Principia Mathematica. Konon terinspirasi saat melihat apel jatuh — meski versi lengkapnya kemungkinan adalah legenda populer."
+  },
+  {
+    bidang: "🎬 Film",
+    pertanyaan: "Film animasi Indonesia 'Si Juki the Movie' terinspirasi dari karakter komik karya siapa?",
+    opsi: ["Raditya Dika", "Faza Meonk", "Andhika Wiradinata", "Benny Rachmadi"],
+    jawaban: 1,
+    penjelasan: "Si Juki adalah karakter komik ciptaan Faza Meonk yang populer sejak 2012. Karakter ini menggambarkan anak muda Jakarta yang kocak dan relate dengan budaya pop lokal, hingga akhirnya diadaptasi menjadi film layar lebar."
+  },
+  {
+    bidang: "🌍 Sejarah Dunia",
+    pertanyaan: "Tembok Besar China dibangun terutama untuk tujuan apa?",
+    opsi: ["Jalur perdagangan", "Irigasi pertanian", "Pertahanan dari serangan utara", "Batas wilayah kerajaan"],
+    jawaban: 2,
+    penjelasan: "Tembok Besar China dibangun selama berabad-abad (utamanya Dinasti Qin, Han, dan Ming) sebagai pertahanan dari serangan suku-suku nomaden dari utara seperti bangsa Xiongnu dan Mongol. Panjang totalnya mencapai lebih dari 21.000 km."
+  },
+  {
+    bidang: "🔢 Matematika",
+    pertanyaan: "Berapakah nilai dari akar kuadrat dari 1.764?",
+    opsi: ["40", "42", "44", "46"],
+    jawaban: 1,
+    penjelasan: "√1.764 = 42, karena 42 × 42 = 1.764. Cara cepat: estimasi antara 40² = 1.600 dan 45² = 2.025, lalu coba 42² = (40+2)² = 1.600 + 160 + 4 = 1.764. ✓"
+  }
+];
+
+let current = 0, score = 0, answered = false, userAnswers = [];
+
+function buildSteps() {
+  const el = document.getElementById('steps');
+  el.innerHTML = soal.map((_, i) => {
+    let cls = '';
+    if (i < current) cls = 'done';
+    else if (i === current) cls = 'active';
+    return `<div class="step ${cls}"></div>`;
+  }).join('');
+}
+
+function historyHTML() {
+  return soal.map((_, i) => {
+    if (i < userAnswers.length) return `<div class="h-dot ${userAnswers[i].benar ? 'ok' : 'no'}"></div>`;
+    if (i === current) return `<div class="h-dot cur"></div>`;
+    return `<div class="h-dot"></div>`;
+  }).join('');
+}
+
+function render() {
+  if (current >= soal.length) { renderResult(); return; }
+  buildSteps();
+  answered = false;
+  const q = soal[current];
+  document.getElementById('card').innerHTML = `
+    <div class="card-top">
+      <div class="badge">${q.bidang}</div>
+      <div class="q-of">${current + 1} / ${soal.length}</div>
+    </div>
+    <div class="question">${q.pertanyaan}</div>
+    <div class="options" id="opts">
+      ${q.opsi.map((o, i) => `
+        <button class="opt" onclick="pilih(${i})">
+          <span class="key">${String.fromCharCode(65+i)}</span>${o}
+        </button>`).join('')}
+    </div>
+    <div class="footer">
+      <div class="history">${historyHTML()}</div>
+      <button class="btn-next" id="btn" disabled onclick="next()">Lanjut →</button>
+    </div>
+  `;
+}
+
+function pilih(i) {
+  if (answered) return;
+  answered = true;
+  const q = soal[current];
+  document.querySelectorAll('.opt').forEach(o => o.disabled = true);
+  const benar = i === q.jawaban;
+  document.querySelectorAll('.opt')[i].classList.add(benar ? 'correct' : 'wrong');
+  if (!benar) document.querySelectorAll('.opt')[q.jawaban].classList.add('correct');
+  if (benar) { score++; document.getElementById('sc').textContent = score; }
+  userAnswers.push({ benar, jawaban: q.opsi[i], kunci: q.opsi[q.jawaban] });
+
+  const expl = document.createElement('div');
+  expl.className = 'expl';
+  expl.innerHTML = `<strong>${benar ? '✅ Benar!' : '❌ Kurang tepat.'}</strong> ${q.penjelasan}`;
+  document.getElementById('opts').after(expl);
+  document.getElementById('btn').disabled = false;
+}
+
+function next() { current++; render(); }
+
+function renderResult() {
+  buildSteps();
+  const pct = Math.round(score / soal.length * 100);
+  const [medal, msg, sub] =
+    pct === 100 ? ['🏆','Sempurna Banget!','Semua benar! Kamu benar-benar berpengetahuan luas.'] :
+    pct >= 80   ? ['🥇','Luar Biasa!','Hampir sempurna. Wawasanmu di berbagai bidang sangat baik!'] :
+    pct >= 60   ? ['🥈','Bagus!','Kamu punya dasar yang solid. Terus tambah pengetahuanmu!'] :
+                  ['📚','Ayo Belajar Lagi!','Jangan menyerah — setiap soal yang salah adalah ilmu baru.'];
+
+  document.getElementById('card').innerHTML = `
+    <div class="result">
+      <span class="r-medal">${medal}</span>
+      <div class="r-score">${score}/${soal.length}</div>
+      <div class="r-pct">${pct}% jawaban benar</div>
+      <div class="r-msg">${msg}</div>
+      <div class="r-sub">${sub}</div>
+      <div class="r-list">
+        ${userAnswers.map((a, i) => `
+          <div class="r-row">
+            <div>${a.benar ? '✅' : '❌'}</div>
+            <div>
+              <b>${soal[i].bidang}</b>
+              <p>${a.benar
+                ? `Benar — ${a.kunci}`
+                : `Jawabanmu: ${a.jawaban} &nbsp;·&nbsp; Kunci: <span style="color:var(--correct);font-weight:600">${a.kunci}</span>`}</p>
+            </div>
+          </div>`).join('')}
+      </div>
+      <button class="btn-reset" onclick="reset()">↺ Main Lagi</button>
+    </div>
+  `;
+}
+
+function reset() { current = 0; score = 0; answered = false; userAnswers = []; document.getElementById('sc').textContent = 0; render(); }
+
+render();
+</script>
+</body>
+</html>
